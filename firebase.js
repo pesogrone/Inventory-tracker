@@ -1,15 +1,18 @@
-// firebase.js
-
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+// import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/storage";
-import dotenv from "dotenv";
+require("dotenv").config();
 
-dotenv.config(); // Load environment variables
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+//call the firebase ClientApp.ts file from firebase folder
 
-// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -19,10 +22,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+if (!firebaseConfig.apiKey) {
+  throw new Error("Missing Firebase configuration");
+}
+//coment test
 
 // Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const firestore = getFirestore(firebaseApp);
-
-// Export initialized Firebase app and Firestore
-export { firebaseApp, firestore };
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+export { app, firestore };
+// const analytics = getAnalytics(app);
