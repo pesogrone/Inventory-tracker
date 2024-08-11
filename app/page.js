@@ -26,6 +26,7 @@ import {
 import { useEffect, useState } from "react";
 
 export default function Home() {
+  // State variables
   const [pantry, setPantry] = useState([]);
   const [filteredInventory, setFilteredInventory] = useState([]);
   const [open, setOpen] = useState(false);
@@ -37,29 +38,34 @@ export default function Home() {
   const [expirationDate, setExpirationDate] = useState("");
   const [expirationDates, setExpirationDates] = useState({});
   const [notes, setNotes] = useState({});
-  useEffect(() => {
-    const savedNotes = JSON.parse(localStorage.getItem("notes")) || {};
-    setNotes(savedNotes);
-    fetchData();
-  }, []);
 
+  // Fetch data from Firestore
   const fetchData = async () => {
     const snapshot = query(collection(firestore, "pantry"));
     const docs = await getDocs(snapshot);
     const pantryList = [];
+    const notesData = {};
     docs.forEach((doc) => {
+      const data = doc.data();
       pantryList.push({ name: doc.id, ...doc.data() });
+      if (data.notes) {
+        notesData[doc.id] = data.notes;
+      }
     });
     setPantry(pantryList);
     setFilteredInventory(pantryList);
+    setNotes(notesData);
+    localStorage.setItem("notes", JSON.stringify(notesData));
   };
+
+  // Fetch data on component mount
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Add item to Firestore
   const addItem = async (item, quantity = 1, expirationDate = null) => {
     const docRef = doc(collection(firestore, "pantry"), item);
-    //check if item already exists
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const { count, expirationDate: existingExpirationDate } = docSnap.data();
@@ -75,6 +81,8 @@ export default function Home() {
     }
     await fetchData();
   };
+
+  // Increment item quantity
   const incrementQuantity = async (itemName) => {
     const docRef = doc(collection(firestore, "pantry"), itemName);
     const docSnap = await getDoc(docRef);
@@ -85,6 +93,7 @@ export default function Home() {
     await fetchData();
   };
 
+  // Decrement item quantity
   const decrementQuantity = async (itemName) => {
     const docRef = doc(collection(firestore, "pantry"), itemName);
     const docSnap = await getDoc(docRef);
@@ -99,6 +108,7 @@ export default function Home() {
     await fetchData();
   };
 
+  // Update item expiration date
   const updateExpirationDate = async (itemName, newExpirationDate) => {
     const docRef = doc(collection(firestore, "pantry"), itemName);
     const docSnap = await getDoc(docRef);
@@ -116,6 +126,8 @@ export default function Home() {
     }
     await fetchData();
   };
+
+  // Handle search functionality
   const handleSearch = () => {
     if (searchTerm.trim() === "" || searchTerm === null) {
       setFilteredInventory(pantry);
@@ -126,14 +138,19 @@ export default function Home() {
       setFilteredInventory(filtered);
     }
   };
+
+  // Update search results when search term changes
   useEffect(() => {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
+  // Handle expiration date change
   const handleExpirationDateChange = (name, date) => {
     setExpirationDates((prev) => ({ ...prev, [name]: date }));
   };
+
+  // Update item notes
   const updateNoteChange = async (itemName, note) => {
     const docRef = doc(collection(firestore, "pantry"), itemName);
     const docSnap = await getDoc(docRef);
@@ -148,10 +165,14 @@ export default function Home() {
     await fetchData();
   };
 
+  // Handle note change
   const handleNoteChange = (name, note) => {
     setNotes((prev) => ({ ...prev, [name]: note }));
   };
+
+  // Check if screen size is small
   const isSmallScreen = useMediaQuery("(max-width:600px)");
+
   return (
     <Box
       display={"flex"}
@@ -160,27 +181,27 @@ export default function Home() {
       flexDirection={"column"}
       gap={2}
       sx={{
-        backgroundImage: "url('/picpantry.jpg')",
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        paddingBottom: "1%",
-        paddingTop: "1%",
+        backgroundImage: "url('/picpantry.jpg')", // Background image for the entire container
+        backgroundSize: "cover", // Cover the entire container
+        backgroundRepeat: "no-repeat", // Do not repeat the background image
+        backgroundPosition: "center", // Center the background image
+        backgroundAttachment: "fixed", // Fix the background image while scrolling
+        paddingBottom: "1%", // Padding at the bottom
+        paddingTop: "1%", // Padding at the top
       }}
     >
       <Box
         sx={{
           backgroundColor: "rgba(255, 255, 255, 0.8)", // Light background to contrast with #333 text
-          padding: 2,
-          borderRadius: 2,
-          textAlign: "center",
+          padding: 2, // Padding inside the box
+          borderRadius: 2, // Rounded corners
+          textAlign: "center", // Center the text
         }}
       >
         <Typography
-          variant={isSmallScreen ? "h4" : "h3"}
-          color={"#333"}
-          gutterBottom
+          variant={isSmallScreen ? "h4" : "h3"} // Responsive typography variant
+          color={"#333"} // Text color
+          gutterBottom // Adds bottom margin
         >
           Pantry Manager
         </Typography>
@@ -189,16 +210,16 @@ export default function Home() {
         </Typography>
       </Box>
       <Box
-        border={"1px solid #333"}
-        borderRadius={"10px"}
-        bgcolor={"#f0f0f0"}
+        border={"1px solid #333"} // Border styling
+        borderRadius={"10px"} // Rounded corners
+        bgcolor={"#f0f0f0"} // Background color
         display={"flex"}
         flexDirection={"column"}
-        alignItems={isSmallScreen ? "center" : "Right"}
-        gap={2}
-        padding={2}
-        justifyContent={isSmallScreen ? "center" : "Right"}
-        width={isSmallScreen ? "95%" : "830px"}
+        alignItems={isSmallScreen ? "center" : "Right"} // Responsive alignment
+        gap={2} // Gap between child elements
+        padding={2} // Padding inside the box
+        justifyContent={isSmallScreen ? "center" : "Right"} // Responsive justification
+        width={isSmallScreen ? "95%" : "830px"} // Responsive width
       >
         <Box width="100%" bgcolor={"ADD8E6"} gap={2}>
           <Typography variant={isSmallScreen ? "h5" : "h4"} color={"#333"}>
@@ -213,8 +234,8 @@ export default function Home() {
             <TextField
               id="outlined-basic"
               label="Item"
-              variant={isSmallScreen ? "standard" : "outlined"}
-              {...(isSmallScreen ? {} : { fullWidth: true })}
+              variant={isSmallScreen ? "standard" : "outlined"} // Responsive variant
+              {...(isSmallScreen ? {} : { fullWidth: true })} // Full width for larger screens
               type="text"
               value={itemname}
               onChange={(e) => setItemname(e.target.value)}
@@ -231,9 +252,8 @@ export default function Home() {
             <TextField
               id="outlined-basic"
               label="Quantity"
-              variant={isSmallScreen ? "standard" : "outlined"}
-              //isSmallScreen not fullWidth to prevent the input from taking up the entire screen
-              {...(isSmallScreen ? {} : { fullWidth: true })}
+              variant={isSmallScreen ? "standard" : "outlined"} // Responsive variant
+              {...(isSmallScreen ? {} : { fullWidth: true })} // Full width for larger screens
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
@@ -249,10 +269,10 @@ export default function Home() {
             />
             <TextField
               id="outlined-basic"
-              variant={isSmallScreen ? "standard" : "outlined"}
-              {...(isSmallScreen ? {} : { fullWidth: true })}
+              variant={isSmallScreen ? "standard" : "outlined"} // Responsive variant
+              {...(isSmallScreen ? {} : { fullWidth: true })} // Full width for larger screens
               type="date"
-              label={isSmallScreen ? "Exp Date" : "Expiration Date"}
+              label={isSmallScreen ? "Exp Date" : "Expiration Date"} // Responsive label
               value={expirationDate}
               onChange={(e) => setExpirationDate(e.target.value)}
               onKeyDown={(e) => {
@@ -265,7 +285,7 @@ export default function Home() {
                 }
               }}
               InputLabelProps={{
-                shrink: true,
+                shrink: true, // Shrink the label when the input is focused
               }}
             />
             <Button
@@ -288,20 +308,20 @@ export default function Home() {
       </Box>
 
       <Box
-        border={"1px solid #333"}
-        borderRadius={"10px"}
-        bgcolor={"#f0f0f0"}
+        border={"1px solid #333"} // Border styling
+        borderRadius={"10px"} // Rounded corners
+        bgcolor={"#f0f0f0"} // Background color
         display={"flex"}
         flexDirection={"column"}
-        alignItems={isSmallScreen ? "center" : "Right"}
-        gap={2}
-        padding={2}
-        justifyContent={isSmallScreen ? "center" : "Right"}
-        width={isSmallScreen ? "95%" : "830px"}
+        alignItems={isSmallScreen ? "center" : "Right"} // Responsive alignment
+        gap={2} // Gap between child elements
+        padding={2} // Padding inside the box
+        justifyContent={isSmallScreen ? "center" : "Right"} // Responsive justification
+        width={isSmallScreen ? "95%" : "830px"} // Responsive width
       >
         <Box width="100%" bgcolor={"ADD8E6"} gap={2}>
           <Typography variant={isSmallScreen ? "h5" : "h4"} color={"#333"}>
-            Search Iventory
+            Search Inventory
           </Typography>
           <Stack
             direction="row"
@@ -311,9 +331,9 @@ export default function Home() {
           >
             <TextField
               fullWidth
-              variant={isSmallScreen ? "standard" : "outlined"}
+              variant={isSmallScreen ? "standard" : "outlined"} // Responsive variant
               placeholder="Search..."
-              width={isSmallScreen ? "100%" : "800px"}
+              width={isSmallScreen ? "100%" : "800px"} // Responsive width
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onChangeCapture={handleSearch}
@@ -322,16 +342,16 @@ export default function Home() {
         </Box>
       </Box>
       <Box
-        border={"1px solid #333"}
-        borderRadius={"10px"}
-        bgcolor={"#f0f0f0"}
+        border={"1px solid #333"} // Border styling
+        borderRadius={"10px"} // Rounded corners
+        bgcolor={"#f0f0f0"} // Background color
         display={"flex"}
         flexDirection={"column"}
-        alignItems={isSmallScreen ? "center" : "Right"}
-        gap={2}
-        padding={2}
-        justifyContent={isSmallScreen ? "center" : "Right"}
-        width={isSmallScreen ? "95%" : "830px"}
+        alignItems={isSmallScreen ? "center" : "Right"} // Responsive alignment
+        gap={2} // Gap between child elements
+        padding={2} // Padding inside the box
+        justifyContent={isSmallScreen ? "center" : "Right"} // Responsive justification
+        width={isSmallScreen ? "95%" : "830px"} // Responsive width
       >
         <Box width="100%" bgcolor={"ADD8E6"} display={"flex"}>
           <Typography variant={isSmallScreen ? "h5" : "h4"} color={"#333"}>
@@ -340,11 +360,11 @@ export default function Home() {
         </Box>
         <Box
           width="100%"
-          height={isSmallScreen ? "200px" : "400px"}
-          sx={{ overflowY: "auto" }}
+          height={isSmallScreen ? "200px" : "400px"} // Responsive height
+          sx={{ overflowY: "auto" }} // Enable vertical scrolling
         >
           <Stack
-            width={isSmallScreen ? "100%" : "780px"}
+            width={isSmallScreen ? "100%" : "780px"} // Responsive width
             spacing={2}
             overflow="auto"
           >
@@ -352,23 +372,23 @@ export default function Home() {
               <Card
                 key={name}
                 width="100%"
-                sx={{ minWidth: "100%", bgcolor: "#f9f9f9", boxShadow: 3 }}
+                sx={{ minWidth: "100%", bgcolor: "#f9f9f9", boxShadow: 3 }} // Card styling
               >
                 <CardContent padding={isSmallScreen ? 0 : 0}>
                   <Box
                     display="flex"
                     justifyContent="space-between"
                     alignItems="flex-start"
-                    flexDirection={isSmallScreen ? "column" : "row"}
+                    flexDirection={isSmallScreen ? "column" : "row"} // Responsive flex direction
                   >
                     <Box
-                      display={isSmallScreen ? "flex" : "block"}
-                      flexDirection={isSmallScreen ? "row" : "column"}
-                      gap={isSmallScreen ? 2 : 0}
-                      alignItems={isSmallScreen ? "center" : "None"}
+                      display={isSmallScreen ? "flex" : "block"} // Responsive display
+                      flexDirection={isSmallScreen ? "row" : "column"} // Responsive flex direction
+                      gap={isSmallScreen ? 2 : 0} // Responsive gap
+                      alignItems={isSmallScreen ? "center" : "None"} // Responsive alignment
                     >
                       <Typography
-                        variant={isSmallScreen ? "h6" : "h5"}
+                        variant={isSmallScreen ? "h6" : "h5"} // Responsive typography variant
                         component="div"
                         gutterBottom
                       >
@@ -383,22 +403,22 @@ export default function Home() {
                     </Box>
                     <Box
                       sx={{
-                        position: "relative",
+                        position: "relative", // Position the note box relatively
                         padding: 0,
-                        borderRadius: 1,
-                        marginLeft: isSmallScreen ? 0 : "auto",
-                        width: isSmallScreen ? "100%" : "500px",
+                        borderRadius: 1, // Rounded corners
+                        marginLeft: isSmallScreen ? 0 : "auto", // Responsive margin
+                        width: isSmallScreen ? "100%" : "500px", // Responsive width
                       }}
                     >
                       <TextField
                         label="Note"
                         variant="outlined"
                         multiline
-                        rows={isSmallScreen ? 1 : 3}
+                        rows={isSmallScreen ? 1 : 3} // Responsive rows
                         sx={{
-                          width: isSmallScreen ? "100%" : "500px",
+                          width: isSmallScreen ? "100%" : "500px", // Responsive width
                           bgcolor: "#fefcbf", // Equivalent to bg-yellow-100
-                          boxShadow: 3,
+                          boxShadow: 3, // Box shadow for the note field
                         }}
                         value={notes[name] || ""}
                         onChange={(e) => handleNoteChange(name, e.target.value)}
@@ -434,6 +454,7 @@ export default function Home() {
                 </CardContent>
                 <CardActions
                   sx={{
+                    // Set the alignment of the CardActions content based on screen size
                     justifyContent: "space-between",
                     flexDirection: isSmallScreen ? "column" : "row",
                     padding: 0,
@@ -451,6 +472,7 @@ export default function Home() {
                       color="primary"
                       onClick={() => incrementQuantity(name)}
                     >
+                      {/* Display "+" on small screens and "Add" on larger screens */}
                       {isSmallScreen ? "+" : "Add"}
                     </Button>
                     <Button
@@ -458,6 +480,7 @@ export default function Home() {
                       color="secondary"
                       onClick={() => decrementQuantity(name)}
                     >
+                      {/* Display "-" on small screens and "Remove" on larger screens */}
                       {isSmallScreen ? "-" : "Remove"}
                     </Button>
 
@@ -536,6 +559,7 @@ export default function Home() {
                       <Box>
                         <Typography variant="h5" component="div" gutterBottom>
                           {name.charAt(0).toUpperCase() + name.slice(1)}
+                          {/* Capitalize the first letter of the name */}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           Expiration Date: {expirationDate || "N/A"}
