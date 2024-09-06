@@ -32,13 +32,15 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 
-// Initialize App Check
-initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider(
-    "process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY"
-  ),
-  isTokenAutoRefreshEnabled: true, // Optional, enables auto-refresh of App Check token
-});
+// Conditionally initialize App Check only on the client side
+if (typeof window !== "undefined") {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(
+      process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY
+    ),
+    isTokenAutoRefreshEnabled: true, // Optional, enables auto-refresh of App Check token
+  });
+}
 
 export { app, firestore };
 // const analytics = getAnalytics(app);
